@@ -69,7 +69,13 @@ class MessageMapperTest {
         photoSize = new PhotoSize();
         photoSize.setFileSize(2);
         photoSizes.add(photoSize);
+        photoSize = new PhotoSize();
+        photoSize.setFileSize(5);
+        photoSizes.add(photoSize);
         message.setPhoto(photoSizes);
+        photoSize = new PhotoSize();
+        photoSize.setFileSize(8);
+        photoSizes.add(photoSize);
         Chat chat = new Chat();
         chat.setId(12L);
         message.setChat(chat);
@@ -84,7 +90,7 @@ class MessageMapperTest {
         assertThat(messageDTO.getText()).isEqualTo("wegfudsvjkl");
         assertThat(messageDTO.getIdUser()).isEqualTo(951L);
         assertThat(messageDTO.getChatId()).isEqualTo(12L);
-        assertThat(messageDTO.getPhotoSize()).isEqualTo(message.getPhoto().get(0).getFileSize());
+        assertThat(messageDTO.getPhotoSize()).isEqualTo(message.getPhoto().get(3).getFileSize());
     }
 
 }

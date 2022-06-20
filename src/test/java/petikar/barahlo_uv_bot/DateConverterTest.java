@@ -1,6 +1,7 @@
 package petikar.barahlo_uv_bot;
 
 import org.junit.jupiter.api.Test;
+import petikar.barahlo_uv_bot.entity.DateConverter;
 
 import java.time.LocalDateTime;
 

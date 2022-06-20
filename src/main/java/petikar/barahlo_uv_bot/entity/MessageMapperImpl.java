@@ -5,7 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.User;
-import petikar.barahlo_uv_bot.DateConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +31,7 @@ public class MessageMapperImpl implements MessageMapper {
         dto.setDate(DateConverter.intToDate(message.getDate()));
         dto.setIdUser(message.getFrom().getId());
         if (message.getPhoto() != null) {
-            Integer sizes = message.getPhoto().get(0).getFileSize();
+            Integer sizes = message.getPhoto().get(3).getFileSize();
             dto.setPhotoSize(sizes);
         }
 
