@@ -4,11 +4,12 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import petikar.barahlo_uv_bot.entity.UserDTO;
 
-import java.util.List;
-
 @Repository
 public interface UserRepository extends CrudRepository<UserDTO, Long> {
 
-    List<UserDTO> findByName(String name);
+    UserDTO getUserDTOById(Long id);
 
+    default boolean getIsCommercialById(Long id){
+        return getUserDTOById(id).isCommercial();
+    }
 }

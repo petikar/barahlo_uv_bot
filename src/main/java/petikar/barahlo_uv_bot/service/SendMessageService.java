@@ -13,4 +13,6 @@ public interface SendMessageService {
     SendMessage createSendMessage(String text);
 
     Set<SendMessage> findDuplicatesAndSendMeList();
+
+    Set<SendMessage> findDuplicatesAndSendMeList(Long userId);
 }

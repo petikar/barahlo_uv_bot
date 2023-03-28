@@ -13,14 +13,18 @@ import java.time.LocalDateTime;
 public class MessageDTO {
     @Id
     private Integer idMessage;
-    private Long chatId;
+    private String mediaGroupId;
+    private Boolean isWarning;
+
+    //TODO указать что это ссылка на другую таблицу
     private Long idUser;
     private String text;
     private Integer photoSize;
     private LocalDateTime date;
-
-    //TODO add firstName, isBot, lastName, userName or use UserDto
-
+    private boolean isBot;
+    private Long chatId;
+    private String label;
+    private LocalDateTime editDate;
     //TODO add videofile, document
 
 }

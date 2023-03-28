@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.User;
+import petikar.barahlo_uv_bot.service.MessageTextUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,27 +16,20 @@ public class MessageMapperImpl implements MessageMapper {
     @Override
     public MessageDTO toDto(Message message) {
         MessageDTO dto = new MessageDTO();
-        String text = "";
-        if (message.getCaption() != null) {
-            text = message.getCaption();
-        }
-        if (message.getText() != null) {
-            if (!text.equals("")) {
-                text = text + " " + message.getText();
-            } else {
-                text = message.getText();
-            }
-        }
+        String text = MessageTextUtils.getTextFromMessage(message);
         dto.setText(text);
         dto.setIdMessage(message.getMessageId());
         dto.setDate(DateConverter.intToDate(message.getDate()));
         dto.setIdUser(message.getFrom().getId());
+
         if (message.getPhoto() != null) {
-            Integer sizes = message.getPhoto().get(3).getFileSize();
-            dto.setPhotoSize(sizes);
+            int size = message.getPhoto().size()-1;
+            dto.setPhotoSize(message.getPhoto().get(size).getFileSize());
         }
 
         dto.setChatId(message.getChatId());
+        dto.setMediaGroupId(message.getMediaGroupId());
+
         return dto;
 
     }
@@ -64,6 +58,7 @@ public class MessageMapperImpl implements MessageMapper {
 
         }
         message.setPhoto(sizes);
+        message.setMediaGroupId(dto.getMediaGroupId());
         return message;
     }
 }

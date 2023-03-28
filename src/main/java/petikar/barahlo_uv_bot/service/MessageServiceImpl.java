@@ -1,11 +1,10 @@
 package petikar.barahlo_uv_bot.service;
 
-import org.mapstruct.factory.Mappers;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import petikar.barahlo_uv_bot.entity.MessageDTO;
-import petikar.barahlo_uv_bot.entity.MessageMapper;
+import petikar.barahlo_uv_bot.entity.*;
 import petikar.barahlo_uv_bot.repository.MessageRepository;
+import petikar.barahlo_uv_bot.repository.UserRepository;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -17,31 +16,57 @@ public class MessageServiceImpl implements MessageService {
 
     //TODO много сервисов, продумать, какие и сколько надо
 
-    MessageRepository repository;
+    private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
 
-    private final MessageMapper mapper = Mappers.getMapper(MessageMapper.class);
+    private final MessageMapper messageMapper;
+    private final UserMapper userMapper;
 
-    public MessageServiceImpl(MessageRepository repository) {
-        this.repository = repository;
+    public MessageServiceImpl(MessageRepository messageRepository, UserRepository userRepository, MessageMapper messageMapper, UserMapper userMapper) {
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.messageMapper = messageMapper;
+        this.userMapper = userMapper;
     }
 
     @Override
-    public void deleteExceptLastWeek() {
-        repository.deleteMessageDTOByDateBefore(LocalDateTime.now().minusDays(7));
-    }
-
-    @Override
+    @Transactional
     public void save(Message message) {
-        MessageDTO messageDTO = mapper.toDto(message);
+        MessageDTO messageDTO = messageMapper.toDto(message);
+        UserDTO userDTO = userMapper.toDto(message.getFrom());
         if (messageDTO.getText().isEmpty()) {
             messageDTO.setText("without text");
         }
-        repository.save(messageDTO);
+
+        if (message.getEditDate() != null){
+            messageDTO.setEditDate(DateConverter.intToDate(message.getEditDate()));
+            MessageDTO m = messageRepository.getById(messageDTO.getIdMessage());
+
+            String label = m.getLabel();
+            if (label!=null) {
+                messageDTO.setLabel(label);
+            }
+
+            Boolean warning = m.getIsWarning();
+            if (warning!=null) {
+                messageDTO.setIsWarning(warning);
+            }
+
+            messageDTO.setIsWarning(m.getIsWarning());
+        }
+
+        messageRepository.save(messageDTO);
+
+        if (!userRepository.existsById(userDTO.getId())) {
+            userRepository.save(userDTO);
+        }
+
     }
 
     @Override
-    public Set<MessageDTO> findAll() {
-        return new HashSet<>(repository.findAll());
+    public List<MessageDTO> findAll() {
+
+        return messageRepository.findAllByDateAfter(LocalDateTime.now().minusDays(6));
     }
 
     /**
@@ -50,10 +75,10 @@ public class MessageServiceImpl implements MessageService {
      * @return Set<MessageDTO>
      */
     @Override
-    @Transactional
+    //TODO   @Transactional
     public Set<MessageDTO> findRepeatMessages() {
 
-        deleteExceptLastWeek();
+        //    deleteExceptLastWeek();
 
         Set<MessageDTO> repeatMessagesByUserId = findRepeatMessagesByUserId();
 
@@ -67,9 +92,9 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public Map<Long, List<MessageDTO>> groupingMessagesByUserId() {
 
-        Set<MessageDTO> allDtoSet = findAll();
+        List<MessageDTO> allDTOs = findAll();
 
-        Map<Long, List<MessageDTO>> mapGroupingByIdUser = allDtoSet.stream()
+        Map<Long, List<MessageDTO>> mapGroupingByIdUser = allDTOs.stream()
                 .collect(Collectors.groupingBy(MessageDTO::getIdUser));
 
         Map<Long, List<MessageDTO>> result = new HashMap<>();
@@ -84,6 +109,15 @@ public class MessageServiceImpl implements MessageService {
         return result;
     }
 
+    @Override
+    public List<MessageDTO> groupingMessagesByUserId(Long userId) {
+
+        List<MessageDTO> result = messageRepository.findByIdUser(userId);
+
+        return result;
+    }
+
+
     //TODO продумать алгоритм, слишком сложно тут придумала.
     //TODO запрос списка по каждому пользователю при наличии повторяющихся сообщений (не сами сообщения пересылать)
     private Set<MessageDTO> findRepeatMessagesByUserId() {
@@ -96,6 +130,15 @@ public class MessageServiceImpl implements MessageService {
         }
 
         return duplicates;
+    }
+
+    //TODO продумать алгоритм, слишком сложно тут придумала.
+    //TODO запрос списка по каждому пользователю при наличии повторяющихся сообщений (не сами сообщения пересылать)
+    private List<MessageDTO> findRepeatMessagesByUserId(Long userId) {
+
+        List<MessageDTO> mapGroupingByIdUser = groupingMessagesByUserId(userId);
+
+        return mapGroupingByIdUser;
     }
 
     private Set<MessageDTO> findRepeatMessagesByText(Set<MessageDTO> repeatMessages) {

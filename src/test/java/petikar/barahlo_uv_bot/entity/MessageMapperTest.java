@@ -1,6 +1,8 @@
 package petikar.barahlo_uv_bot.entity;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
@@ -13,9 +15,12 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@SpringBootTest
 class MessageMapperTest {
 
-    private final MessageMapper mapper = new MessageMapperImpl();
+    @Autowired
+    private MessageMapper mapper;
+
 
     @Test
     public void toMessageTest() {

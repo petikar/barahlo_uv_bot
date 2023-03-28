@@ -17,36 +17,47 @@ public class ForwardMessageServiceImpl implements ForwardMessageService {
 
     private final MessageMapper mapper = Mappers.getMapper(MessageMapper.class);
 
-    private final MessageService service;
+    private final MessageService messageService;
 
     private final ConfigProperties configProperties;
 
-    public ForwardMessageServiceImpl(MessageService service, ConfigProperties configProperties) {
-        this.service = service;
+    public ForwardMessageServiceImpl(MessageService messageService, ConfigProperties configProperties) {
+        this.messageService = messageService;
         this.configProperties = configProperties;
     }
 
     @Override
     public ForwardMessage createForwardMessage(Update update) {
-        ForwardMessage forwardMessage;
+        ForwardMessage forwardMessage = null;
+
+        //TODO mediaGroupId
         if (update.hasMessage()) {
             Message message = update.getMessage();
-            service.save(message);
+
+            forwardMessage = ForwardMessage.builder()
+                    .chatId(configProperties.getHistoryId())
+                    .fromChatId(String.valueOf(message.getChatId()))
+                    .messageId(message.getMessageId())
+                    .build();
+            messageService.save(message);
+
+        } else if (update.hasEditedMessage()) {
+            Message message = update.getEditedMessage();
             forwardMessage = ForwardMessage.builder()
                     .chatId(configProperties.getHistoryId())
                     .fromChatId(String.valueOf(message.getChatId()))
                     .messageId(message.getMessageId()
                     )
                     .build();
-        } else {
-            forwardMessage = null;
+            messageService.save(message);
         }
+
         return forwardMessage;
     }
 
     @Override
     public Set<ForwardMessage> findAndForwardDuplicates() {
-        Set<MessageDTO> repeatMessagesDTO = service.findRepeatMessages();
+        Set<MessageDTO> repeatMessagesDTO = messageService.findRepeatMessages();
         Set<ForwardMessage> repeatMessages = new HashSet<>();
 
         for (MessageDTO messageDTO : repeatMessagesDTO) {
@@ -63,8 +74,7 @@ public class ForwardMessageServiceImpl implements ForwardMessageService {
         ForwardMessage forwardMessage = ForwardMessage.builder()
                 .chatId(configProperties.getHistoryId())
                 .fromChatId(String.valueOf(message.getChatId()))
-                .messageId(message.getMessageId()
-                )
+                .messageId(message.getMessageId())
                 .build();
 
         return forwardMessage;

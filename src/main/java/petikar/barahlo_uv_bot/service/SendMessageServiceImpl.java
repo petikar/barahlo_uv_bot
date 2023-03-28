@@ -17,6 +17,8 @@ public class SendMessageServiceImpl implements SendMessageService {
 
     private final ConfigProperties configProperties;
 
+    private Set<MessageDTO> commercialMessages = new HashSet<>();
+
     public SendMessageServiceImpl(MessageService service, ConfigProperties configProperties) {
         this.service = service;
         this.configProperties = configProperties;
@@ -26,7 +28,7 @@ public class SendMessageServiceImpl implements SendMessageService {
     public SendMessage createSendMessage(String text) {
 
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(configProperties.getHistoryId());
+        sendMessage.setChatId(configProperties.getImportantId());
         sendMessage.setText(text);
 
         return sendMessage;
@@ -40,14 +42,24 @@ public class SendMessageServiceImpl implements SendMessageService {
             //TODO add name and ets
             StringBuilder text = new StringBuilder();
             for (MessageDTO dto : messages.get(id)) {
-                text.append(String.format("%n%nтекст: %s %nразмер фото: %d", dto.getText(), dto.getPhotoSize()));
+                text.append(String.format("%n%nтекст: %s %nразмер фото: %d %nдата отправки %s", dto.getText(), dto.getPhotoSize(), dto.getDate()));
             }
-
             duplicates.add(createSendMessage(String.format("От пользователя id = %d действуют следующие объявления: %s", id, text.toString())));
         }
         return duplicates;
     }
 
-    ;
+    @Override
+    public Set<SendMessage> findDuplicatesAndSendMeList(Long userId) {
+        List<MessageDTO> messages = service.groupingMessagesByUserId(userId);
 
+        Set<SendMessage> duplicates = new HashSet<>();
+        StringBuilder text = new StringBuilder();
+
+        for (MessageDTO dto : messages) {
+            text.append(String.format("%n%nтекст: %s %nразмер фото: %d %nдата отправки %s", dto.getText(), dto.getPhotoSize(), dto.getDate()));
+        }
+        duplicates.add(createSendMessage(String.format("‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️От коммерческого пользователя id = %d действуют следующие объявления: %s \n ‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️‼️", userId, text.toString())));
+        return duplicates;
+    }
 }

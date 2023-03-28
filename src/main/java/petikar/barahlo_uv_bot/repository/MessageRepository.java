@@ -5,9 +5,23 @@ import org.springframework.stereotype.Repository;
 import petikar.barahlo_uv_bot.entity.MessageDTO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
-public interface MessageRepository extends JpaRepository<MessageDTO, Long> {
+public interface MessageRepository extends JpaRepository<MessageDTO, Integer> {
 
     void deleteMessageDTOByDateBefore(LocalDateTime date);
+
+    List<MessageDTO> findByIdUser(Long userId);
+
+    List<MessageDTO> findAllByDateAfter(LocalDateTime date);
+
+    List<MessageDTO> findAllByMediaGroupId(String mediaGroupId);
+
+    default boolean getIsWarningById(Integer id){
+        return getMessageDTOByIdMessage(id).getIsWarning();
+    }
+
+    MessageDTO getMessageDTOByIdMessage(Integer idMessage);
+
 }

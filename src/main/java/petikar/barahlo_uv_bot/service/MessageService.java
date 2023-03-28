@@ -13,13 +13,15 @@ public interface MessageService {
      * This service is used for operations with database(repository)
      */
 
-    void deleteExceptLastWeek();
+   // LocalDateTime deleteExceptLastWeek();
 
     void save(Message message);
 
-    Set<MessageDTO> findAll();
+    List<MessageDTO> findAll();
 
     Map<Long, List<MessageDTO>> groupingMessagesByUserId();
+
+    List<MessageDTO> groupingMessagesByUserId(Long userId);
 
     Set<MessageDTO> findRepeatMessages();
 

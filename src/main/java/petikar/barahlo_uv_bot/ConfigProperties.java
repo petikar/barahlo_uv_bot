@@ -9,7 +9,14 @@ public class ConfigProperties {
     @Value("${bot.historyId}")
     private String historyId;
 
+    @Value("${bot.importantId}")
+    private String importantId;
+
     public String getHistoryId() {
         return historyId;
+    }
+
+    public String getImportantId() {
+        return importantId;
     }
 }
