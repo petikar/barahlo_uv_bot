@@ -19,6 +19,8 @@ public interface MessageService {
 
     List<MessageDTO> findAll();
 
+    List<MessageDTO> findAllExceptToday();
+
     Map<Long, List<MessageDTO>> groupingMessagesByUserId();
 
     List<MessageDTO> groupingMessagesByUserId(Long userId);

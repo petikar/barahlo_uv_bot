@@ -69,6 +69,11 @@ public class MessageServiceImpl implements MessageService {
         return messageRepository.findAllByDateAfter(LocalDateTime.now().minusDays(6));
     }
 
+    @Override
+    public List<MessageDTO> findAllExceptToday() {
+        return messageRepository.findAllByDateBetween(LocalDateTime.now().minusDays(6), LocalDateTime.now().minusHours(12));
+    }
+
     /**
      * This method represents the whole cycle of searching data and formation data about repeated messages
      *

@@ -60,7 +60,11 @@ public class BarahloUvBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
 
+        //TODO заменить на логирование
+
+        System.out.println("\n\n\nПолучено ОБНОВЛЕНИЕ " + LocalDateTime.now() + ":\n");
         System.out.println(update);
+        System.out.println("\n\n\n");
 
         if (update.hasMessage()) {
             if (update.getMessage().hasText() && update.getMessage().getText().equals("/findAndForward")) {
@@ -83,7 +87,7 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                 Message message = update.getMessage().getReplyToMessage();
                 //commercialSet.add(message)
                 try {
-                    //TODO добавлять коммерческих в список, и когда проходит время какое-то, делать рассылку.
+                    //TODO добавлять коммерческих в очередь без повторов, и когда проходит время какое-то, делать проверку:
                     execute(commercialService.setCommercial(message, message.getFrom()));
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
@@ -91,15 +95,21 @@ public class BarahloUvBot extends TelegramLongPollingBot {
             }
 
             // установка статуса предупреждения
-            else if (update.getMessage().hasText() &&
+            else if (update.getMessage().hasText()
+                    &&
                     (
+                            //TODO: вынести проверку эту в отдельный метод
                             update.getMessage().getText().startsWith("/warn") ||
                                     update.getMessage().getText().toLowerCase().contains("правила") ||
                                     update.getMessage().getText().toLowerCase().contains("где") ||
                                     update.getMessage().getText().toLowerCase().contains("посмотреть") ||
-                                    update.getMessage().getText().toLowerCase().contains("размещение")
-                    ) &&
-                    update.getMessage().getFrom().getId().equals(Long.valueOf(myId))) {
+                                    update.getMessage().getText().toLowerCase().contains("размещение") ||
+                                    update.getMessage().getText().toLowerCase().contains("повторное") ||
+                                    update.getMessage().getText().toLowerCase().contains("?")
+                    )
+                    &&
+                    update.getMessage().getFrom().getId().equals(Long.valueOf(myId))
+            ) {
                 Message message = update.getMessage().getReplyToMessage();
                 try {
                     execute(warningService.setWarning(message, message.getFrom()));
@@ -148,9 +158,12 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                                 text = text + "\n" + message.getText() + " .";
                             }
                             execute(sendMessageService.createSendMessage(text));
+                            int sec = (int) (random() * 10000);
+                            System.out.println("sleep: " + sec);
+                            sleep(sec);
                         }
                     }
-                } catch (TelegramApiException e) {
+                } catch (TelegramApiException | InterruptedException e) {
                     e.printStackTrace();
                 }
 
@@ -165,9 +178,14 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                         for (SendMessage message : sendMessageService.findDuplicatesAndSendMeList(id)) {
                             try {
                                 execute(message);
+                                int sec = (int) (random() * 10000);
+                                System.out.println("sleep: " + sec);
+                                sleep(sec);
                             } catch (TelegramApiException e) {
                                 e.printStackTrace();
                                 System.out.println("Ошибка в onUpdateReceived методе класса BarahloUvBot, метод c коммерческим сообщением");
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
                             }
                         }
                     }

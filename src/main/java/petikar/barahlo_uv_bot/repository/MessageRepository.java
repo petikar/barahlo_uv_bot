@@ -16,6 +16,8 @@ public interface MessageRepository extends JpaRepository<MessageDTO, Integer> {
 
     List<MessageDTO> findAllByDateAfter(LocalDateTime date);
 
+    List<MessageDTO> findAllByDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+
     List<MessageDTO> findAllByMediaGroupId(String mediaGroupId);
 
     default boolean getIsWarningById(Integer id){
