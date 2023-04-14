@@ -85,7 +85,7 @@ public class CommercialServiceImpl implements CommercialService {
 
         messageDTO.setText("Пользователю " + userName + " с id = " + userDTO.getId() + " установлен статус коммерческого пользователя");
 
-        SendMessage sendMessage = sendMessageService.createSendMessage(" \uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\nПользователю " + userName + " с id = " + userDTO.getId() + " установлен статус коммерческого пользователя\n\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40");
+        SendMessage sendMessage = sendMessageService.createSendMessageImportant(" \uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\nПользователю " + userName + " с id = " + userDTO.getId() + " установлен статус коммерческого пользователя\n\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40\uD83D\uDC40");
 
         return sendMessage;
     }

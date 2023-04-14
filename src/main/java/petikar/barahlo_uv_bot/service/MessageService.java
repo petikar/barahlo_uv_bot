@@ -27,5 +27,7 @@ public interface MessageService {
 
     Set<MessageDTO> findRepeatMessages();
 
+    MessageDTO getMessageDTOById(Integer id);
+
     //TODO разобраться с обновлением в телеграмме (редактирование сообщения, его удаление)
 }

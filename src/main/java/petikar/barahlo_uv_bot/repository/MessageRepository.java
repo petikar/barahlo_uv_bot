@@ -14,6 +14,8 @@ public interface MessageRepository extends JpaRepository<MessageDTO, Integer> {
 
     List<MessageDTO> findByIdUser(Long userId);
 
+    List<MessageDTO> findByIdUserAndDateAfterOrderByDate(Long userId, LocalDateTime date);
+
     List<MessageDTO> findAllByDateAfter(LocalDateTime date);
 
     List<MessageDTO> findAllByDateBetween(LocalDateTime startDate, LocalDateTime endDate);

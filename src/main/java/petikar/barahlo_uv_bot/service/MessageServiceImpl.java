@@ -38,17 +38,17 @@ public class MessageServiceImpl implements MessageService {
             messageDTO.setText("without text");
         }
 
-        if (message.getEditDate() != null){
+        if (message.getEditDate() != null) {
             messageDTO.setEditDate(DateConverter.intToDate(message.getEditDate()));
             MessageDTO m = messageRepository.getById(messageDTO.getIdMessage());
 
             String label = m.getLabel();
-            if (label!=null) {
+            if (label != null) {
                 messageDTO.setLabel(label);
             }
 
             Boolean warning = m.getIsWarning();
-            if (warning!=null) {
+            if (warning != null) {
                 messageDTO.setIsWarning(warning);
             }
 
@@ -80,7 +80,7 @@ public class MessageServiceImpl implements MessageService {
      * @return Set<MessageDTO>
      */
     @Override
-    //TODO   @Transactional
+    @Transactional
     public Set<MessageDTO> findRepeatMessages() {
 
         //    deleteExceptLastWeek();
@@ -92,6 +92,11 @@ public class MessageServiceImpl implements MessageService {
         repeatMessages.addAll(repeatMessagesByPhotoSize);
         return repeatMessages;
 
+    }
+
+    @Override
+    public MessageDTO getMessageDTOById(Integer id) {
+        return messageRepository.getById(id);
     }
 
     @Override
@@ -117,7 +122,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public List<MessageDTO> groupingMessagesByUserId(Long userId) {
 
-        List<MessageDTO> result = messageRepository.findByIdUser(userId);
+        List<MessageDTO> result = messageRepository.findByIdUserAndDateAfterOrderByDate(userId, LocalDateTime.now().minusDays(45));
 
         return result;
     }
@@ -137,8 +142,6 @@ public class MessageServiceImpl implements MessageService {
         return duplicates;
     }
 
-    //TODO продумать алгоритм, слишком сложно тут придумала.
-    //TODO запрос списка по каждому пользователю при наличии повторяющихся сообщений (не сами сообщения пересылать)
     private List<MessageDTO> findRepeatMessagesByUserId(Long userId) {
 
         List<MessageDTO> mapGroupingByIdUser = groupingMessagesByUserId(userId);

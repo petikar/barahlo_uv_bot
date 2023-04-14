@@ -58,11 +58,11 @@ public class WarningServiceImpl implements WarningService {
 
         messageDTO.setIsWarning(true);
 
-        if (messageDTO.getMediaGroupId()!=null) {
+        if (messageDTO.getMediaGroupId() != null) {
             warningSet.addAll(messageRepository.findAllByMediaGroupId(messageDTO.getMediaGroupId()));
         }
 
-        for (MessageDTO mDTO: warningSet) {
+        for (MessageDTO mDTO : warningSet) {
             mDTO.setIsWarning(Boolean.TRUE);
             mDTO.setLabel(label);
             messageRepository.save(mDTO);
@@ -79,10 +79,7 @@ public class WarningServiceImpl implements WarningService {
 
         String userName = NameUtils.getFullNameFromDTO(userDTO);
 
-        //messageDTO.setText("Пользователю " + userName + " с id = " + userDTO.getId() + " установлено предупреждение");
-
-        SendMessage sendMessage = sendMessageService.createSendMessage("\n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \nПользователю " + userName + " с id = " + userDTO.getId() + " установлено предупреждение \n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \n на сообщение " + messageDTO);
-        //    forwardMessageService.sendMessage(messageDTO);
+        SendMessage sendMessage = sendMessageService.createSendMessageImportant("\n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \nПользователю " + userName + " с id = " + userDTO.getId() + " установлено предупреждение \n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \n на сообщение " + messageDTO);
         System.out.println(messageDTO.getText());
         return sendMessage;
     }

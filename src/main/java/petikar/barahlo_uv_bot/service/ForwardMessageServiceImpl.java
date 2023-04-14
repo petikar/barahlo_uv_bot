@@ -9,6 +9,7 @@ import petikar.barahlo_uv_bot.ConfigProperties;
 import petikar.barahlo_uv_bot.entity.MessageDTO;
 import petikar.barahlo_uv_bot.entity.MessageMapper;
 
+import javax.transaction.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,6 +53,41 @@ public class ForwardMessageServiceImpl implements ForwardMessageService {
             messageService.save(message);
         }
 
+        return forwardMessage;
+    }
+
+    @Transactional
+    @Override
+    public ForwardMessage createForwardMessageFromEdited(Update update) {
+
+        System.out.println("Работает метод createForwardMessageFromEdited из ForwardMessageService");
+
+        ForwardMessage forwardMessage = null;
+
+        Integer id = update.getEditedMessage().getMessageId();
+
+        String text = messageService.getMessageDTOById(id).getText();
+        Message message = update.getEditedMessage();
+        String newText = MessageTextUtils.getTextFromMessage(message);
+        System.out.println("Текст из базы данных: " + text);
+        System.out.println("Текст из update: " + newText);
+
+        if (!text.equals(newText)) {
+
+            System.out.println("Тексты не совпадают");
+
+            text = "UPD: \n" + newText;
+            message.setText(text);
+            update.setMessage(message);
+
+            forwardMessage = ForwardMessage.builder()
+                    .chatId(configProperties.getHistoryId())
+                    .fromChatId(String.valueOf(message.getChatId()))
+                    .messageId(message.getMessageId()
+                    )
+                    .build();
+            messageService.save(message);
+        }
         return forwardMessage;
     }
 

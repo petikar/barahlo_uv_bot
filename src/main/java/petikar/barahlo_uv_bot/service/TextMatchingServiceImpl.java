@@ -10,13 +10,16 @@ import petikar.barahlo_uv_bot.entity.UserMapper;
 
 import java.util.*;
 
-import static me.xdrop.fuzzywuzzy.FuzzySearch.tokenSetRatio;
+import static me.xdrop.fuzzywuzzy.FuzzySearch.*;
 
 @Service
 public class TextMatchingServiceImpl implements TextMatchingService {
 
     private final MessageService service;
     private final UserMapper userMapper;
+
+    // сообщения с какой длиной начинаем учитывать при поиске дублей
+    private final int testLength = 9;
 
     public TextMatchingServiceImpl(MessageService service, UserMapper userMapper) {
         this.service = service;
@@ -32,14 +35,9 @@ public class TextMatchingServiceImpl implements TextMatchingService {
 
         Message message = update.getMessage();
 
-        String text = "";
+        String text = MessageTextUtils.getTextFromMessage(message);
 
-        if (update.getMessage().hasText()) {
-            text = update.getMessage().getText();
-        }
-        if (update.getMessage().getCaption() != null) {
-            text = text + update.getMessage().getCaption(); //TODO вроде может быть или только текст, или только описание
-        }
+        ;
 
         UserDTO userDTO = userMapper.toDto(update.getMessage().getFrom());
 
@@ -51,7 +49,7 @@ public class TextMatchingServiceImpl implements TextMatchingService {
             result.addAll(findAndSendReallySimilarMessageByPhotoSize(messageDTOs, photoSize));
         }
 
-        if (text != null) {
+        if (text != null && text.length() > testLength) {
             result.addAll(findAndSendReallySimilarMessageByText(messageDTOs, userDTO, text));
         }
 
@@ -87,42 +85,64 @@ public class TextMatchingServiceImpl implements TextMatchingService {
         Set<MessageDTO> resultSet = new HashSet<>();
 
         for (MessageDTO messageDTO : messageDTOs) {
-            if (messageDTO!=null && messageDTO.getText() != null) {
+            if (messageDTO != null && messageDTO.getText() != null) {
                 if (!messageDTO.getText().equals("without text")) {
-                    // int result = ratio(text, messageDTO.getText());
-                    // int result = tokenSortPartialRatio(text, messageDTO.getText());
-                    int result = tokenSetRatio(text, messageDTO.getText());
-                    //int result = weightedRatio(text, messageDTO.getText());
 
-                    String newText;
+                    //TODO Выбрать лучший показатель похожести
+                    if (messageDTO.getText().length() > testLength) {
+                        // int resultRatio = ratio(text, messageDTO.getText());
+                        // int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getText());
+                        int resultTokenSetRatio = tokenSetRatio(text, messageDTO.getText());
+                        //int resultWeightedRatio = weightedRatio(text, messageDTO.getText());
 
-                    if ((result > 65) && (userDTO.getId().equals(messageDTO.getIdUser()))) {
+                        String newText;
 
-                        String fullName = NameUtils.getFullNameFromDTO(userDTO);
+                        if ((resultTokenSetRatio > 65) && (userDTO.getId().equals(messageDTO.getIdUser()))) {
 
-                        newText = "\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\nРанее сообщение было размещено тем же пользователем, с id = "
-                                + messageDTO.getIdUser() + " " + fullName + "\n";
-                        messageDTO.setText(newText +
-                                "\uD83E\uDDDA\u200D♂ result = " + result + "%\n" +
-                                "\uD83E\uDDDA\u200D♂ IdMessage = " + messageDTO.getIdMessage() + "\n" +
-                                "\uD83E\uDDDA\u200D♂ Новый размещённый текст = " + text + "\n" +
-                                "\uD83E\uDDDA\u200D♂ Текст, размещённый ранее = " + messageDTO.getText() + "\n" +
-                                "\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\n Метка предупреждения, поставленная ранее = " + messageDTO.getIsWarning() + "\n" +
-                                "\uD83E\uDDDA\u200D♂ Прежняя дата размещения = " + messageDTO.getDate()
-                        );
-                        resultSet.add(messageDTO);
-                    } else if (result > 88) {
-                        newText = "Совпадение с сообщением ДРУГОГО ПОЛЬЗОВАТЕЛЯ\n" +
-                                "\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\n Ранее размещал пользователь с id = " + messageDTO.getIdUser() + "\n";
-                        messageDTO.setText(newText +
-                                "\uD83D\uDC39 result = " + result + "%\n" +
-                                "\uD83D\uDC39 IdMessage = " + messageDTO.getIdMessage() + "\n" +
-                                "\uD83D\uDC39 Новый размещённый текст = " + text + "\n" +
-                                "\uD83D\uDC39 Текст, размещённый ранее = " + messageDTO.getText() + "\n" +
-                                "\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\n Метка предупреждения, поставленная ранее = " + messageDTO.getIsWarning() + "\n" +
-                                "\uD83D\uDC39 Прежняя дата размещения = " + messageDTO.getDate()
-                        );
-                        resultSet.add(messageDTO);
+                            int resultRatio = ratio(text, messageDTO.getText());
+                            int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getText());
+                            int resultWeightedRatio = weightedRatio(text, messageDTO.getText());
+
+                            String fullName = NameUtils.getFullNameFromDTO(userDTO);
+
+                            newText = "\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\uD83E\uDDDA\u200D♂\n" +
+                                    "Ранее сообщение было размещено тем же пользователем, с id = "
+                                    + messageDTO.getIdUser() + " " + fullName + "\n";
+
+                            messageDTO.setText(newText +
+                                    "\uD83E\uDDDA\u200D♂ result tokenSetRatio = " + resultTokenSetRatio + "%\n" +
+                                    "resultRatio = " + resultRatio + "%\n" +
+                                    "resultTokenSortPartialRatio = " + resultTokenSortPartialRatio + "%\n" +
+                                    "resultWeightedRatio = " + resultWeightedRatio + "%\n" +
+                                    "\uD83E\uDDDA\u200D♂ IdMessage = " + messageDTO.getIdMessage() + "\n" +
+                                    "\uD83E\uDDDA\u200D♂ \uD83E\uDDDA\u200D♂ \uD83E\uDDDA\u200D♂ Новый размещённый текст = " + text + "\n" +
+                                    "\uD83E\uDDDA\u200D♂ \uD83E\uDDDA\u200D♂ \uD83E\uDDDA\u200D♂ Текст, размещённый ранее = " + messageDTO.getText() + "\n" +
+                                    "\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\uD83E\uDDDA\u200D♂\uD83E\uDD96\n " +
+                                    "\uD83E\uDDDA\u200D♂ Метка предупреждения, поставленная ранее = " + messageDTO.getIsWarning() + "\n" +
+                                    "\uD83E\uDDDA\u200D♂ Прежняя дата размещения = " + messageDTO.getDate()
+                            );
+                            resultSet.add(messageDTO);
+                        } else if (resultTokenSetRatio > 88) {
+
+                            int resultRatio = ratio(text, messageDTO.getText());
+                            int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getText());
+                            int resultWeightedRatio = weightedRatio(text, messageDTO.getText());
+
+                            newText = "Совпадение с сообщением ДРУГОГО ПОЛЬЗОВАТЕЛЯ\n" +
+                                    "\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\n Ранее размещал пользователь с id = " + messageDTO.getIdUser() + "\n";
+                            messageDTO.setText(newText +
+                                    "\uD83D\uDC39 result = " + resultTokenSetRatio + "%\n" +
+                                    "resultRatio = " + resultRatio + "%\n" +
+                                    "resultTokenSortPartialRatio = " + resultTokenSortPartialRatio + "%\n" +
+                                    "resultWeightedRatio = " + resultWeightedRatio + "%\n" +
+                                    "\uD83D\uDC39 IdMessage = " + messageDTO.getIdMessage() + "\n" +
+                                    "\uD83D\uDC39 Новый размещённый текст = " + text + "\n" +
+                                    "\uD83D\uDC39 Текст, размещённый ранее = " + messageDTO.getText() + "\n" +
+                                    "\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\uD83D\uDC39\uD83E\uDD96\n Метка предупреждения, поставленная ранее = " + messageDTO.getIsWarning() + "\n" +
+                                    "\uD83D\uDC39 Прежняя дата размещения = " + messageDTO.getDate()
+                            );
+                            resultSet.add(messageDTO);
+                        }
                     }
                 }
             }

@@ -15,7 +15,7 @@ import petikar.barahlo_uv_bot.service.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static java.lang.Math.random;
+import static java.lang.Math.*;
 import static java.lang.Thread.sleep;
 
 @Component
@@ -99,6 +99,7 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                     &&
                     (
                             //TODO: вынести проверку эту в отдельный метод
+                            //TODO: добавить разные предупреждения по разным причинам (в дто)
                             update.getMessage().getText().startsWith("/warn") ||
                                     update.getMessage().getText().toLowerCase().contains("правила") ||
                                     update.getMessage().getText().toLowerCase().contains("где") ||
@@ -147,7 +148,7 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                     List<MessageDTO> messages = textMatchingService.findAndSendReallySimilarMessage(update);
 
                     if (messages.size() > 0) {
-                        execute(sendMessageService.createSendMessage("\uD83C\uDF4A\uD83C" +
+                        execute(sendMessageService.createSendMessageImportant("\uD83C\uDF4A\uD83C" +
                                 "\uDF4A\uD83C\uDF4A\uD83C\uDF4A\uD83C\uDF4A\nВНИМАНИЕ, ДУБЛИ\n" +
                                 "\uD83C\uDF4A\uD83C\uDF4A\uD83C\uDF4A\uD83C\uDF4A\uD83C\uDF4A"));
 
@@ -157,7 +158,7 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                             if (message.getText() != null) {
                                 text = text + "\n" + message.getText() + " .";
                             }
-                            execute(sendMessageService.createSendMessage(text));
+                            execute(sendMessageService.createSendMessageImportant(text));
                             int sec = (int) (random() * 10000);
                             System.out.println("sleep: " + sec);
                             sleep(sec);
@@ -175,17 +176,56 @@ public class BarahloUvBot extends TelegramLongPollingBot {
 
                     //вытащить это в новый поток TODO переработать метод, чтоб дожидался нескольких сообщений
                     if (commercialService.isCommercial(id)) {
-                        for (SendMessage message : sendMessageService.findDuplicatesAndSendMeList(id)) {
-                            try {
-                                execute(message);
-                                int sec = (int) (random() * 10000);
-                                System.out.println("sleep: " + sec);
-                                sleep(sec);
-                            } catch (TelegramApiException e) {
-                                e.printStackTrace();
-                                System.out.println("Ошибка в onUpdateReceived методе класса BarahloUvBot, метод c коммерческим сообщением");
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                        // если есть текст, не только фото
+                        // то выдавать список всех действующих объявлений
+                        String text = MessageTextUtils.getTextFromMessage(update.getMessage());
+                        if (!text.equals("")) {
+                            for (SendMessage message : sendMessageService.findDuplicatesAndSendMeListForCommercialSender(id)) {
+                                try {
+/*                                    if len(info) > 4096:
+                                    for x in range(0, len(info), 4096):
+                                    bot.send_message(message.chat.id, info[x:x+4096])
+else:
+                                    bot.send_message(message.chat.id, info)*/
+                                    if (message.getText().length() > 4096) {
+                                        int len = message.getText().length();
+
+                                        System.out.println("len "+len);
+                                        int beginIndex = 0;
+                                        int endIndex = 4096;
+                                        // for (int i = 0; i<len; i++) {
+                                        String startText = message.getText();
+                                        while (endIndex <= len && beginIndex<endIndex) {
+
+                                            //TODO логирование
+
+                                            System.out.println("\nделю\n");
+                                            System.out.println("beginIndex "+beginIndex);
+                                            System.out.println("endIndex "+endIndex);
+
+                                            String newText = startText.substring(beginIndex, endIndex);
+                                            message.setText(newText);
+                                            execute(message);
+
+                                            beginIndex = endIndex;
+                                            endIndex = min(beginIndex + 4096, len);
+
+                                            int sec = (int) (random() * 10000);
+                                            System.out.println("sleep: " + sec);
+                                            sleep(sec);
+                                        }
+                                    } else {
+                                        execute(message);
+                                        int sec = (int) (random() * 10000);
+                                        System.out.println("sleep: " + sec);
+                                        sleep(sec);
+                                    }
+                                } catch (TelegramApiException e) {
+                                    e.printStackTrace();
+                                    System.out.println("Ошибка в onUpdateReceived методе класса BarahloUvBot, метод c коммерческим сообщением");
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                     }
@@ -196,11 +236,12 @@ public class BarahloUvBot extends TelegramLongPollingBot {
             }
         } else if (update.hasEditedMessage()) {
             try {
-                Message message = update.getEditedMessage();
-                String text = "UPD: \n" + MessageTextUtils.getTextFromMessage(message);
-                message.setText(text);
-                update.setMessage(message);
-                execute(forwardMessageService.createForwardMessage(update));
+                ForwardMessage forwardMessage = forwardMessageService.createForwardMessageFromEdited(update);
+                if (forwardMessage != null) {
+                    System.out.println("forwardMessage не ноль");
+                    execute(sendMessageService.createSendMessageHistory("\uD83D\uDC30 Сообщение изменено:"));
+                    execute(forwardMessage);
+                }
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }

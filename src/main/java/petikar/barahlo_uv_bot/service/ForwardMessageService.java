@@ -15,6 +15,8 @@ public interface ForwardMessageService {
 
     ForwardMessage createForwardMessage(Update update);
 
+    ForwardMessage createForwardMessageFromEdited(Update update);
+
     Set<ForwardMessage> findAndForwardDuplicates();
 
     ForwardMessage sendMessage(MessageDTO dto);
