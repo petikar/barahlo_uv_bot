@@ -64,6 +64,12 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
+    public void updateDTO(MessageDTO messageDTO){
+        messageRepository.save(messageDTO);
+    }
+
+    @Override
     public List<MessageDTO> findAll() {
 
         return messageRepository.findAllByDateAfter(LocalDateTime.now().minusDays(6));

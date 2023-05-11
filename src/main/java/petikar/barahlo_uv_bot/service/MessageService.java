@@ -17,6 +17,8 @@ public interface MessageService {
 
     void save(Message message);
 
+    void updateDTO(MessageDTO messageDTO);
+
     List<MessageDTO> findAll();
 
     List<MessageDTO> findAllExceptToday();

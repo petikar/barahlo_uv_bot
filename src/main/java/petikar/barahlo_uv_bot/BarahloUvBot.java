@@ -104,7 +104,7 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                                     update.getMessage().getText().toLowerCase().contains("правила") ||
                                     update.getMessage().getText().toLowerCase().contains("где") ||
                                     update.getMessage().getText().toLowerCase().contains("посмотреть") ||
-                                    update.getMessage().getText().toLowerCase().contains("размещение") ||
+                                    update.getMessage().getText().toLowerCase().contains("фото") ||
                                     update.getMessage().getText().toLowerCase().contains("повторное") ||
                                     update.getMessage().getText().toLowerCase().contains("?")
                     )
@@ -112,8 +112,48 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                     update.getMessage().getFrom().getId().equals(Long.valueOf(myId))
             ) {
                 Message message = update.getMessage().getReplyToMessage();
+                String textFromUpdate = update.getMessage().getText().toLowerCase();
+                StringBuilder reason = new StringBuilder();
+                if (textFromUpdate.contains("2.1") ||
+                        textFromUpdate.contains("3.3") ||
+                        textFromUpdate.contains("что")
+                ) {
+                    reason.append("2.1, 3.3 Название ");
+                }
+                if (textFromUpdate.contains("1.4") ||
+                        textFromUpdate.contains("коррект")
+                ) {
+                    reason.append("1.4 Цена не корректна ");
+                }
+                if (textFromUpdate.contains("переписки")) {
+                    reason.append("1.5 Переписки ");
+                }
+                if (textFromUpdate.contains("лекарств")) {
+                    reason.append("1.2 Лекарства ");
+                }
+                if (textFromUpdate.contains("2.2") ||
+                        textFromUpdate.contains("цена") ||
+                        textFromUpdate.contains("цены") ||
+                        textFromUpdate.contains("цену")
+                ) {
+                    reason.append("2.2, 3.2 Цена не указана ");
+                }
+                if (textFromUpdate.contains("фото")) {
+                    reason.append("2.3, 3.1 Много фото ");
+                }
+                if (textFromUpdate.contains("повтор")) {
+                    reason.append("2.5, 3.4 Повторное размещение ");
+                }
+                if (textFromUpdate.contains("где") ||
+                        textFromUpdate.contains("доставка")
+                ) {
+                    reason.append("3.5, 2.4 Доставка, район ");
+                }
+                if (textFromUpdate.contains("част")                ) {
+                    reason.append("2.6, 3.7 Несколькими частями ");
+                }
                 try {
-                    execute(warningService.setWarning(message, message.getFrom()));
+                    execute(warningService.setWarning(message, message.getFrom(), String.valueOf(reason)));
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
@@ -182,26 +222,21 @@ public class BarahloUvBot extends TelegramLongPollingBot {
                         if (!text.equals("")) {
                             for (SendMessage message : sendMessageService.findDuplicatesAndSendMeListForCommercialSender(id)) {
                                 try {
-/*                                    if len(info) > 4096:
-                                    for x in range(0, len(info), 4096):
-                                    bot.send_message(message.chat.id, info[x:x+4096])
-else:
-                                    bot.send_message(message.chat.id, info)*/
                                     if (message.getText().length() > 4096) {
                                         int len = message.getText().length();
 
-                                        System.out.println("len "+len);
+                                        System.out.println("len " + len);
                                         int beginIndex = 0;
                                         int endIndex = 4096;
                                         // for (int i = 0; i<len; i++) {
                                         String startText = message.getText();
-                                        while (endIndex <= len && beginIndex<endIndex) {
+                                        while (endIndex <= len && beginIndex < endIndex) {
 
                                             //TODO логирование
 
                                             System.out.println("\nделю\n");
-                                            System.out.println("beginIndex "+beginIndex);
-                                            System.out.println("endIndex "+endIndex);
+                                            System.out.println("beginIndex " + beginIndex);
+                                            System.out.println("endIndex " + endIndex);
 
                                             String newText = startText.substring(beginIndex, endIndex);
                                             message.setText(newText);
@@ -239,7 +274,7 @@ else:
                 ForwardMessage forwardMessage = forwardMessageService.createForwardMessageFromEdited(update);
                 if (forwardMessage != null) {
                     System.out.println("forwardMessage не ноль");
-                    execute(sendMessageService.createSendMessageHistory("\uD83D\uDC30 Сообщение изменено:"));
+                    execute(sendMessageService.createSendMessageImportant("\uD83D\uDC30 Сообщение изменено:"));
                     execute(forwardMessage);
                 }
             } catch (TelegramApiException e) {

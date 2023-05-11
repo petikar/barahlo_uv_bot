@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import petikar.barahlo_uv_bot.NormalizeUtils;
 import petikar.barahlo_uv_bot.entity.MessageDTO;
 import petikar.barahlo_uv_bot.entity.UserDTO;
 import petikar.barahlo_uv_bot.entity.UserMapper;
@@ -19,7 +20,7 @@ public class TextMatchingServiceImpl implements TextMatchingService {
     private final UserMapper userMapper;
 
     // сообщения с какой длиной начинаем учитывать при поиске дублей
-    private final int testLength = 9;
+    private final int testLength = 4;
 
     public TextMatchingServiceImpl(MessageService service, UserMapper userMapper) {
         this.service = service;
@@ -36,8 +37,6 @@ public class TextMatchingServiceImpl implements TextMatchingService {
         Message message = update.getMessage();
 
         String text = MessageTextUtils.getTextFromMessage(message);
-
-        ;
 
         UserDTO userDTO = userMapper.toDto(update.getMessage().getFrom());
 
@@ -69,6 +68,7 @@ public class TextMatchingServiceImpl implements TextMatchingService {
                                     "\uD83C\uDF06 MediaGroupId = " + messageDTO.getMediaGroupId() + "\n" +
                                     "\uD83C\uDF06 Размер фото = " + photoSize + "\n" +
                                     "\uD83C\uDF06 Ранее размещал пользователь с id = " + messageDTO.getIdUser() + "\n" +
+                                    "\uD83C\uDF06\uD83C\uDF06  Предупреждение, поставленное ранее = " + messageDTO.getIsWarning() + "\n" +
                                     "\uD83C\uDF06 Прежняя дата размещения = " + "\n" + messageDTO.getDate()
                     );
                     //TODO из другой таблицы достать имя пользователя
@@ -82,6 +82,8 @@ public class TextMatchingServiceImpl implements TextMatchingService {
 
     private Set<MessageDTO> findAndSendReallySimilarMessageByText(List<MessageDTO> messageDTOs, UserDTO userDTO, String text) {
 
+        // text = NormalizeUtils.delStopWords(text);
+
         Set<MessageDTO> resultSet = new HashSet<>();
 
         for (MessageDTO messageDTO : messageDTOs) {
@@ -92,16 +94,22 @@ public class TextMatchingServiceImpl implements TextMatchingService {
                     if (messageDTO.getText().length() > testLength) {
                         // int resultRatio = ratio(text, messageDTO.getText());
                         // int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getText());
-                        int resultTokenSetRatio = tokenSetRatio(text, messageDTO.getText());
+
+                        if (messageDTO.getNormalizeText() == null){
+                            messageDTO.setNormalizeText(NormalizeUtils.normalize(messageDTO.getText()));
+                            service.updateDTO(messageDTO);
+                        }
+
+                        int resultTokenSetRatio = tokenSetRatio(text, messageDTO.getNormalizeText());
                         //int resultWeightedRatio = weightedRatio(text, messageDTO.getText());
 
                         String newText;
 
                         if ((resultTokenSetRatio > 65) && (userDTO.getId().equals(messageDTO.getIdUser()))) {
 
-                            int resultRatio = ratio(text, messageDTO.getText());
-                            int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getText());
-                            int resultWeightedRatio = weightedRatio(text, messageDTO.getText());
+                            int resultRatio = ratio(text, messageDTO.getNormalizeText());
+                            int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getNormalizeText());
+                            int resultWeightedRatio = weightedRatio(text, messageDTO.getNormalizeText());
 
                             String fullName = NameUtils.getFullNameFromDTO(userDTO);
 
@@ -124,9 +132,9 @@ public class TextMatchingServiceImpl implements TextMatchingService {
                             resultSet.add(messageDTO);
                         } else if (resultTokenSetRatio > 88) {
 
-                            int resultRatio = ratio(text, messageDTO.getText());
-                            int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getText());
-                            int resultWeightedRatio = weightedRatio(text, messageDTO.getText());
+                            int resultRatio = ratio(text, messageDTO.getNormalizeText());
+                            int resultTokenSortPartialRatio = tokenSortPartialRatio(text, messageDTO.getNormalizeText());
+                            int resultWeightedRatio = weightedRatio(text, messageDTO.getNormalizeText());
 
                             newText = "Совпадение с сообщением ДРУГОГО ПОЛЬЗОВАТЕЛЯ\n" +
                                     "\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\uD83D\uDC39\n Ранее размещал пользователь с id = " + messageDTO.getIdUser() + "\n";

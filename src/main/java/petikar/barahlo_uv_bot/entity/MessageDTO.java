@@ -25,6 +25,8 @@ public class MessageDTO {
     private Long chatId;
     private String label;
     private LocalDateTime editDate;
+    private String normalizeText;
+    private String reason;
     //TODO add videofile, document
 
 }

@@ -8,5 +8,5 @@ public interface WarningService {
 
     boolean isWarning(Integer id);
 
-    SendMessage setWarning(Message message, User user);
+    SendMessage setWarning(Message message, User user, String reason);
 }

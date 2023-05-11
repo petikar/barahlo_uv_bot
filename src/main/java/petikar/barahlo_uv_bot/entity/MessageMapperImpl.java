@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.PhotoSize;
 import org.telegram.telegrambots.meta.api.objects.User;
+import petikar.barahlo_uv_bot.NormalizeUtils;
 import petikar.barahlo_uv_bot.service.MessageTextUtils;
 
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ public class MessageMapperImpl implements MessageMapper {
 
         dto.setChatId(message.getChatId());
         dto.setMediaGroupId(message.getMediaGroupId());
+
+        dto.setNormalizeText(NormalizeUtils.normalize(text));
 
         return dto;
 

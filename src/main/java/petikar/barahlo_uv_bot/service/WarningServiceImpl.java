@@ -41,7 +41,7 @@ public class WarningServiceImpl implements WarningService {
 
     @Override
     @Transactional
-    public SendMessage setWarning(Message message, User user) {
+    public SendMessage setWarning(Message message, User user, String reason) {
 
         //TODO ставить метку по всем сообщениям с одинаковой группой
 
@@ -65,21 +65,27 @@ public class WarningServiceImpl implements WarningService {
         for (MessageDTO mDTO : warningSet) {
             mDTO.setIsWarning(Boolean.TRUE);
             mDTO.setLabel(label);
+            mDTO.setReason(reason);
             messageRepository.save(mDTO);
         }
 
-        SendMessage sendMessage = sendMessageSetWarning(messageDTO, userDTO);
+        SendMessage sendMessage = sendMessageSetWarning(messageDTO, userDTO, reason);
 
         return sendMessage;
     }
 
-    private SendMessage sendMessageSetWarning(MessageDTO messageDTO, UserDTO userDTO) {
+    private SendMessage sendMessageSetWarning(MessageDTO messageDTO, UserDTO userDTO, String reason) {
 
         System.out.println("sendMessageSetWarning(UserDTO userDTO) Класс WarningServiceImpl");
 
         String userName = NameUtils.getFullNameFromDTO(userDTO);
 
-        SendMessage sendMessage = sendMessageService.createSendMessageImportant("\n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \nПользователю " + userName + " с id = " + userDTO.getId() + " установлено предупреждение \n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \n на сообщение " + messageDTO);
+        SendMessage sendMessage = sendMessageService.createSendMessageImportant(
+                "\n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 " +
+                        "\nПользователю " + userName + " с id = " + userDTO.getId() +
+                        " установлено предупреждение c причиной " + reason +
+                        " \n \uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80\uD83E\uDD80 \n " +
+                        "на сообщение " + messageDTO);
         System.out.println(messageDTO.getText());
         return sendMessage;
     }
